@@ -1,55 +1,49 @@
-require('dotenv').config()
+const express = require('express')
+const { MongoClient } = require('mongodb');
+const app = express()
+const cors = require('cors')
 
-const express = require("express");
-const { MongoClient } = require("mongodb");
-const app = express();
-const port = process.env.PORT || 3000;
-const cors = require("cors");
-
-
-app.use(cors());
-app.use(express.json());
-
-// uri missing 
-
-const client = new MongoClient(uri);
-
-async function runServer() {
-  try {
+const port = process.env.PORT || 5000
+app.use(express.json())
+app.use(cors())
 
 
-    // ১. প্রথমে MongoDB-এর সাথে কানেক্ট হবে
-    await client.connect();
-    console.log("✅ my server is connected to mongodb");
+const client = new MongoClient('mongodb://myUserDb:NNQUZwFfbieiWaMZ@ac-f47hxh9-shard-00-00.3lvxinm.mongodb.net:27017,ac-f47hxh9-shard-00-01.3lvxinm.mongodb.net:27017,ac-f47hxh9-shard-00-02.3lvxinm.mongodb.net:27017/?ssl=true&replicaSet=atlas-itykcb-shard-0&authSource=admin')
 
-   const db = client.db('myDataBase')
-   const userCollection = db.collection('users')
+async function run () {
+  try{
+    await client.connect()
 
-    // ২. ক্লায়েন্ট কানেক্ট হওয়ার পর আপনার সব API / Routes এখানে লিখবেন
-    app.get("/users", async (req, res) => {
-      const cursor = userCollection.find()
-      const result = await cursor.toArray()
+    const db = client.db('myDB')
+    const userCollection = db.collection('users')
+
+     app.get('/users', async(req, res ) => {
+      const result = await userCollection.find().toArray()
       res.send(result)
-    });
+     })
 
 
-    app.post('/users', async(req,res)=> {
-         const newUser = req.body;
-         console.log('new user', newUser)
-         const result = await userCollection.insertOne(newUser)
-         res.send(result)
+    app.post('/users', async (req,res)=>{
+      const newUser = req.body
+      const result = await userCollection.insertOne(newUser)
+      res.status(201).json({
+        message : 'Add user successfully',
+        id : result.insertedId
+      })
     })
-  
 
-  } catch (err) {
-    console.error("❌ Failed to connect to MongoDB", err);
+
+    console.log("my data server connect with monodb")
   }
+  catch (err){
+    console.dir(err)
+  }
+
 }
 
-// ফাংশনটি কল করা হলো
-runServer().catch(console.dir);
+app.listen(port, ()=> {
+  console.log(`server connect on port ${port}`)
+})
 
-// ৩. সার্ভার লিসেন সবার বাইরে বা নিচে থাকবে
-app.listen(port, () => {
-  console.log(`🚀 server connect on port ${port}`);
-});
+
+run()

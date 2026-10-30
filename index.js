@@ -1,5 +1,5 @@
 const express = require('express')
-const { MongoClient } = require('mongodb');
+const { MongoClient,ObjectId } = require('mongodb');
 const app = express()
 const cors = require('cors')
 
@@ -32,6 +32,16 @@ async function run () {
       })
     })
 
+
+    app.delete('/users/:id', async (req,res)=> {
+      console.log('server hitting')
+
+      const userId = req.params.id
+      
+      const quary = {_id: new ObjectId(userId)}
+      const result = await userCollection.deleteOne(quary)
+      res.send(result)
+    })
 
     console.log("my data server connect with monodb")
   }
